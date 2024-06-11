@@ -1,0 +1,2803 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        #map {
+            width: 1433px;
+            height: 804px;
+        }
+        </style>
+        <title>L'aide alimentaire dans le gard </title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet-svg-shape-markers.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/GardCommunes_1.js"></script>
+        <script src="data/EPCIGard_2.js"></script>
+        <script src="data/Dpartementsvoisins_3.js"></script>
+        <script src="data/Gard_4.js"></script>
+        <script src="data/Centresdesecours_5.js"></script>
+        <script src="data/PATdpartemental_6.js"></script>
+        <script src="data/PATVirdouleCamargue_7.js"></script>
+        <script src="data/PATUzgePontduGard_8.js"></script>
+        <script src="data/PATPaysdUzs_9.js"></script>
+        <script src="data/PATPimontCvnol_10.js"></script>
+        <script src="data/PATPetiteCamargue_11.js"></script>
+        <script src="data/PATNmesMtropole_12.js"></script>
+        <script src="data/PATAlsAgglo_13.js"></script>
+        <script src="data/UnitTerritorialedActionSocialeetdInsertionUTASI_14.js"></script>
+        <script src="data/TauxdepauvretEPCI_255265_15.js"></script>
+        <script src="data/TauxdepauvretEPCI_215225_16.js"></script>
+        <script src="data/TauxdepauvretEPCI_174194_17.js"></script>
+        <script src="data/TauxdepauvretEPCI_138168_18.js"></script>
+        <script src="data/TauxdepauvretEPCI_105_19.js"></script>
+        <script src="data/QPVGard_20.js"></script>
+        <script src="data/CommunesavecQPV_21.js"></script>
+        <script src="data/CommunesnondesserviespasTC_22.js"></script>
+        <script src="data/Communesdesserviesparlerseauinterurbain_23.js"></script>
+        <script src="data/Lignesinterurbaines_24.js"></script>
+        <script src="data/TransportAvignon_25.js"></script>
+        <script src="data/TransportBagnolsSurCze_26.js"></script>
+        <script src="data/UGGOarrtsdebus_27.js"></script>
+        <script src="data/CommunesdesserviesparTCAlesetsapriphrie_28.js"></script>
+        <script src="data/TransportAlsetpriphrie_29.js"></script>
+        <script src="data/CommunesdanslerseauTANGO_30.js"></script>
+        <script src="data/Tangolignesdebus_31.js"></script>
+        <script src="data/Tangoarrtsdebus_32.js"></script>
+        <script src="data/Communesavecaidealimentaire_33.js"></script>
+        <script src="data/Autresassociationshabilites_34.js"></script>
+        <script src="data/Dispositifsitinrantsnonpartenaires_35.js"></script>
+        <script src="data/SecoursCatholiquenonpartenaireBA_36.js"></script>
+        <script src="data/SecoursPopulaire_37.js"></script>
+        <script src="data/RestosduCoeur_38.js"></script>
+        <script src="data/Autresassociationspartenaires_39.js"></script>
+        <script src="data/CCASpartenaires_40.js"></script>
+        <script src="data/CroixRouge_41.js"></script>
+        <script src="data/SecoursCatholique_42.js"></script>
+        <script src="data/LOrdredeMalte_43.js"></script>
+        <script src="data/BanqueAlimentaireduGard_44.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[43.43006710850043,2.7686724391925326],[44.59527769196901,5.659684026964818]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        document.querySelector(".leaflet-popup-pane").addEventListener("load", function(event) {
+          var tagName = event.target.tagName,
+            popup = map._popup;
+          // Also check if flag is already set.
+          if (tagName === "IMG" && popup && !popup._updated) {
+            popup._updated = true; // Set flag to prevent looping.
+            popup.update();
+          }
+        }, true);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleRoad_0');
+        map.getPane('pane_GoogleRoad_0').style.zIndex = 400;
+        var layer_GoogleRoad_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleRoad_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleRoad_0;
+        map.addLayer(layer_GoogleRoad_0);
+        function pop_GardCommunes_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="codgeo"colspan="2"><strong>codgeo</strong><br />' + (feature.properties['codgeo'] !== null ? autolinker.link(feature.properties['codgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_GardCommunes_1_0() {
+            return {
+                pane: 'pane_GardCommunes_1',
+                opacity: 1,
+                color: 'rgba(109,109,109,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(141,90,153,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_GardCommunes_1');
+        map.getPane('pane_GardCommunes_1').style.zIndex = 401;
+        map.getPane('pane_GardCommunes_1').style['mix-blend-mode'] = 'normal';
+        var layer_GardCommunes_1 = new L.geoJson(json_GardCommunes_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_GardCommunes_1',
+            layerName: 'layer_GardCommunes_1',
+            pane: 'pane_GardCommunes_1',
+            onEachFeature: pop_GardCommunes_1,
+            style: style_GardCommunes_1_0,
+        });
+        bounds_group.addLayer(layer_GardCommunes_1);
+        function pop_EPCIGard_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="TYPE_EPCI"colspan="2"><strong>Type</strong><br />' + (feature.properties['TYPE_EPCI'] !== null ? autolinker.link(feature.properties['TYPE_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_EPCIGard_2_0() {
+            return {
+                pane: 'pane_EPCIGard_2',
+                opacity: 1,
+                color: 'rgba(175,104,226,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_EPCIGard_2');
+        map.getPane('pane_EPCIGard_2').style.zIndex = 402;
+        map.getPane('pane_EPCIGard_2').style['mix-blend-mode'] = 'normal';
+        var layer_EPCIGard_2 = new L.geoJson(json_EPCIGard_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_EPCIGard_2',
+            layerName: 'layer_EPCIGard_2',
+            pane: 'pane_EPCIGard_2',
+            onEachFeature: pop_EPCIGard_2,
+            style: style_EPCIGard_2_0,
+        });
+        bounds_group.addLayer(layer_EPCIGard_2);
+        function pop_Dpartementsvoisins_3(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="dep"colspan="2"><strong>Département </strong><br />' + (feature.properties['dep'] !== null ? autolinker.link(feature.properties['dep'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="reg"colspan="2"><strong>Région</strong><br />' + (feature.properties['reg'] !== null ? autolinker.link(feature.properties['reg'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Nom</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Dpartementsvoisins_3_0() {
+            return {
+                pane: 'pane_Dpartementsvoisins_3',
+                opacity: 1,
+                color: 'rgba(5,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Dpartementsvoisins_3');
+        map.getPane('pane_Dpartementsvoisins_3').style.zIndex = 403;
+        map.getPane('pane_Dpartementsvoisins_3').style['mix-blend-mode'] = 'normal';
+        var layer_Dpartementsvoisins_3 = new L.geoJson(json_Dpartementsvoisins_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Dpartementsvoisins_3',
+            layerName: 'layer_Dpartementsvoisins_3',
+            pane: 'pane_Dpartementsvoisins_3',
+            onEachFeature: pop_Dpartementsvoisins_3,
+            style: style_Dpartementsvoisins_3_0,
+        });
+        bounds_group.addLayer(layer_Dpartementsvoisins_3);
+        function pop_Gard_4(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="id"colspan="2"><strong>id</strong><br />' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="dep"colspan="2"><strong>dep</strong><br />' + (feature.properties['dep'] !== null ? autolinker.link(feature.properties['dep'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="reg"colspan="2"><strong>reg</strong><br />' + (feature.properties['reg'] !== null ? autolinker.link(feature.properties['reg'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>libgeo</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Porteur"colspan="2"><strong>Porteur</strong><br />' + (feature.properties['Porteur'] !== null ? autolinker.link(feature.properties['Porteur'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Gard_4_0() {
+            return {
+                pane: 'pane_Gard_4',
+                opacity: 1,
+                color: 'rgba(107,12,14,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_Gard_4');
+        map.getPane('pane_Gard_4').style.zIndex = 404;
+        map.getPane('pane_Gard_4').style['mix-blend-mode'] = 'normal';
+        var layer_Gard_4 = new L.geoJson(json_Gard_4, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_Gard_4',
+            layerName: 'layer_Gard_4',
+            pane: 'pane_Gard_4',
+            onEachFeature: pop_Gard_4,
+            style: style_Gard_4_0,
+        });
+        bounds_group.addLayer(layer_Gard_4);
+        map.addLayer(layer_Gard_4);
+        function pop_Centresdesecours_5(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Nom</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tel"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Tel'] !== null ? autolinker.link(feature.properties['Tel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Type</th>\
+                        <td class="visible-with-data" id="Type">' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Communes c"colspan="2"><strong>Communes</strong><br />' + (feature.properties['Communes c'] !== null ? autolinker.link(feature.properties['Communes c'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Centresdesecours_5_0() {
+            return {
+                pane: 'pane_Centresdesecours_5',
+                radius: 7.6,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,0,1.0)',
+                interactive: true,
+            }
+        }
+        function style_Centresdesecours_5_1() {
+            return {
+                pane: 'pane_Centresdesecours_5',
+                radius: 3.2,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(125,139,143,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Centresdesecours_5');
+        map.getPane('pane_Centresdesecours_5').style.zIndex = 405;
+        map.getPane('pane_Centresdesecours_5').style['mix-blend-mode'] = 'normal';
+        var layer_Centresdesecours_5 = new L.geoJson.multiStyle(json_Centresdesecours_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Centresdesecours_5',
+            layerName: 'layer_Centresdesecours_5',
+            pane: 'pane_Centresdesecours_5',
+            onEachFeature: pop_Centresdesecours_5,
+            pointToLayers: [function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Centresdesecours_5_0(feature));
+            },function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Centresdesecours_5_1(feature));
+            },
+        ]});
+        bounds_group.addLayer(layer_Centresdesecours_5);
+        function pop_PATdpartemental_6(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Département</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Porteur"colspan="2"><strong>Porteur</strong><br />' + (feature.properties['Porteur'] !== null ? autolinker.link(feature.properties['Porteur'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type de porteur</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        var pattern_PATdpartemental_6_0 = new L.StripePattern({
+            weight: 0.9,
+            spaceWeight: 2.0,
+            color: '#00aa00',
+            opacity: 1.0,
+            spaceOpacity: 0,
+            angle: 225
+        });
+        pattern_PATdpartemental_6_0.addTo(map);
+        function style_PATdpartemental_6_0() {
+            return {
+                pane: 'pane_PATdpartemental_6',
+                stroke: false,
+                fillOpacity: 1,
+                fillPattern: pattern_PATdpartemental_6_0,
+                interactive: true,
+            }
+        }
+        function style_PATdpartemental_6_1() {
+            return {
+                pane: 'pane_PATdpartemental_6',
+                opacity: 1,
+                color: 'rgba(0,219,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATdpartemental_6');
+        map.getPane('pane_PATdpartemental_6').style.zIndex = 406;
+        map.getPane('pane_PATdpartemental_6').style['mix-blend-mode'] = 'normal';
+        var layer_PATdpartemental_6 = new L.geoJson.multiStyle(json_PATdpartemental_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATdpartemental_6',
+            layerName: 'layer_PATdpartemental_6',
+            pane: 'pane_PATdpartemental_6',
+            onEachFeature: pop_PATdpartemental_6,
+            styles: [style_PATdpartemental_6_0,style_PATdpartemental_6_1,]
+        });
+        bounds_group.addLayer(layer_PATdpartemental_6);
+        function pop_PATVirdouleCamargue_7(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>NOM_EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATVirdouleCamargue_7_0() {
+            return {
+                pane: 'pane_PATVirdouleCamargue_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,108,117,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATVirdouleCamargue_7');
+        map.getPane('pane_PATVirdouleCamargue_7').style.zIndex = 407;
+        map.getPane('pane_PATVirdouleCamargue_7').style['mix-blend-mode'] = 'normal';
+        var layer_PATVirdouleCamargue_7 = new L.geoJson(json_PATVirdouleCamargue_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATVirdouleCamargue_7',
+            layerName: 'layer_PATVirdouleCamargue_7',
+            pane: 'pane_PATVirdouleCamargue_7',
+            onEachFeature: pop_PATVirdouleCamargue_7,
+            style: style_PATVirdouleCamargue_7_0,
+        });
+        bounds_group.addLayer(layer_PATVirdouleCamargue_7);
+        function pop_PATUzgePontduGard_8(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>NOM_EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATUzgePontduGard_8_0() {
+            return {
+                pane: 'pane_PATUzgePontduGard_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,94,189,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATUzgePontduGard_8');
+        map.getPane('pane_PATUzgePontduGard_8').style.zIndex = 408;
+        map.getPane('pane_PATUzgePontduGard_8').style['mix-blend-mode'] = 'normal';
+        var layer_PATUzgePontduGard_8 = new L.geoJson(json_PATUzgePontduGard_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATUzgePontduGard_8',
+            layerName: 'layer_PATUzgePontduGard_8',
+            pane: 'pane_PATUzgePontduGard_8',
+            onEachFeature: pop_PATUzgePontduGard_8,
+            style: style_PATUzgePontduGard_8_0,
+        });
+        bounds_group.addLayer(layer_PATUzgePontduGard_8);
+        function pop_PATPaysdUzs_9(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>NOM_EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATPaysdUzs_9_0() {
+            return {
+                pane: 'pane_PATPaysdUzs_9',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(47,100,225,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATPaysdUzs_9');
+        map.getPane('pane_PATPaysdUzs_9').style.zIndex = 409;
+        map.getPane('pane_PATPaysdUzs_9').style['mix-blend-mode'] = 'normal';
+        var layer_PATPaysdUzs_9 = new L.geoJson(json_PATPaysdUzs_9, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATPaysdUzs_9',
+            layerName: 'layer_PATPaysdUzs_9',
+            pane: 'pane_PATPaysdUzs_9',
+            onEachFeature: pop_PATPaysdUzs_9,
+            style: style_PATPaysdUzs_9_0,
+        });
+        bounds_group.addLayer(layer_PATPaysdUzs_9);
+        function pop_PATPimontCvnol_10(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>NOM_EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATPimontCvnol_10_0() {
+            return {
+                pane: 'pane_PATPimontCvnol_10',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(132,237,151,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATPimontCvnol_10');
+        map.getPane('pane_PATPimontCvnol_10').style.zIndex = 410;
+        map.getPane('pane_PATPimontCvnol_10').style['mix-blend-mode'] = 'normal';
+        var layer_PATPimontCvnol_10 = new L.geoJson(json_PATPimontCvnol_10, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATPimontCvnol_10',
+            layerName: 'layer_PATPimontCvnol_10',
+            pane: 'pane_PATPimontCvnol_10',
+            onEachFeature: pop_PATPimontCvnol_10,
+            style: style_PATPimontCvnol_10_0,
+        });
+        bounds_group.addLayer(layer_PATPimontCvnol_10);
+        function pop_PATPetiteCamargue_11(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>NOM_EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATPetiteCamargue_11_0() {
+            return {
+                pane: 'pane_PATPetiteCamargue_11',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(157,206,92,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATPetiteCamargue_11');
+        map.getPane('pane_PATPetiteCamargue_11').style.zIndex = 411;
+        map.getPane('pane_PATPetiteCamargue_11').style['mix-blend-mode'] = 'normal';
+        var layer_PATPetiteCamargue_11 = new L.geoJson(json_PATPetiteCamargue_11, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATPetiteCamargue_11',
+            layerName: 'layer_PATPetiteCamargue_11',
+            pane: 'pane_PATPetiteCamargue_11',
+            onEachFeature: pop_PATPetiteCamargue_11,
+            style: style_PATPetiteCamargue_11_0,
+        });
+        bounds_group.addLayer(layer_PATPetiteCamargue_11);
+        function pop_PATNmesMtropole_12(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>NOM_EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATNmesMtropole_12_0() {
+            return {
+                pane: 'pane_PATNmesMtropole_12',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(113,39,210,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATNmesMtropole_12');
+        map.getPane('pane_PATNmesMtropole_12').style.zIndex = 412;
+        map.getPane('pane_PATNmesMtropole_12').style['mix-blend-mode'] = 'normal';
+        var layer_PATNmesMtropole_12 = new L.geoJson(json_PATNmesMtropole_12, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATNmesMtropole_12',
+            layerName: 'layer_PATNmesMtropole_12',
+            pane: 'pane_PATNmesMtropole_12',
+            onEachFeature: pop_PATNmesMtropole_12,
+            style: style_PATNmesMtropole_12_0,
+        });
+        bounds_group.addLayer(layer_PATNmesMtropole_12);
+        function pop_PATAlsAgglo_13(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="NOM_EPCI"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['NOM_EPCI'] !== null ? autolinker.link(feature.properties['NOM_EPCI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="NomPAT"colspan="2"><strong>NomPAT</strong><br />' + (feature.properties['NomPAT'] !== null ? autolinker.link(feature.properties['NomPAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type"colspan="2"><strong>Type de porteur</strong><br />' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Niveau"colspan="2"><strong>Niveau</strong><br />' + (feature.properties['Niveau'] !== null ? autolinker.link(feature.properties['Niveau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PATAlsAgglo_13_0() {
+            return {
+                pane: 'pane_PATAlsAgglo_13',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(237,203,130,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PATAlsAgglo_13');
+        map.getPane('pane_PATAlsAgglo_13').style.zIndex = 413;
+        map.getPane('pane_PATAlsAgglo_13').style['mix-blend-mode'] = 'normal';
+        var layer_PATAlsAgglo_13 = new L.geoJson(json_PATAlsAgglo_13, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PATAlsAgglo_13',
+            layerName: 'layer_PATAlsAgglo_13',
+            pane: 'pane_PATAlsAgglo_13',
+            onEachFeature: pop_PATAlsAgglo_13,
+            style: style_PATAlsAgglo_13_0,
+        });
+        bounds_group.addLayer(layer_PATAlsAgglo_13);
+        function pop_UnitTerritorialedActionSocialeetdInsertionUTASI_14(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="habitants"colspan="2"><strong>Habitants</strong><br />' + (feature.properties['habitants'] !== null ? autolinker.link(feature.properties['habitants'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="libelle"colspan="2"><strong>Nom de l\'UTASI</strong><br />' + (feature.properties['libelle'] !== null ? autolinker.link(feature.properties['libelle'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_UnitTerritorialedActionSocialeetdInsertionUTASI_14_0(feature) {
+            switch(String(feature.properties['libelle'])) {
+                case 'Camargue Vidourle':
+                    return {
+                pane: 'pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+                opacity: 1,
+                color: 'rgba(142,129,213,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 5.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Cévennes-Aigoual':
+                    return {
+                pane: 'pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+                opacity: 1,
+                color: 'rgba(229,80,132,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 5.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Grand Nîmes':
+                    return {
+                pane: 'pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+                opacity: 1,
+                color: 'rgba(13,221,148,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 5.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Uzège-Gard Rhodanien':
+                    return {
+                pane: 'pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+                opacity: 1,
+                color: 'rgba(217,233,111,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 5.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14');
+        map.getPane('pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14').style.zIndex = 414;
+        map.getPane('pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14').style['mix-blend-mode'] = 'normal';
+        var layer_UnitTerritorialedActionSocialeetdInsertionUTASI_14 = new L.geoJson(json_UnitTerritorialedActionSocialeetdInsertionUTASI_14, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+            layerName: 'layer_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+            pane: 'pane_UnitTerritorialedActionSocialeetdInsertionUTASI_14',
+            onEachFeature: pop_UnitTerritorialedActionSocialeetdInsertionUTASI_14,
+            style: style_UnitTerritorialedActionSocialeetdInsertionUTASI_14_0,
+        });
+        bounds_group.addLayer(layer_UnitTerritorialedActionSocialeetdInsertionUTASI_14);
+        function pop_TauxdepauvretEPCI_255265_15(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="sdci_2016"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['sdci_2016'] !== null ? autolinker.link(feature.properties['sdci_2016'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_1"colspan="2"><strong>Revenu médian (en €)</strong><br />' + (feature.properties['Gard - d_1'] !== null ? autolinker.link(feature.properties['Gard - d_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_2"colspan="2"><strong>Taux de pauvreté (en %)</strong><br />' + (feature.properties['Gard - d_2'] !== null ? autolinker.link(feature.properties['Gard - d_2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TauxdepauvretEPCI_255265_15_0() {
+            return {
+                pane: 'pane_TauxdepauvretEPCI_255265_15',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.7)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(103,0,13,0.7)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TauxdepauvretEPCI_255265_15');
+        map.getPane('pane_TauxdepauvretEPCI_255265_15').style.zIndex = 415;
+        map.getPane('pane_TauxdepauvretEPCI_255265_15').style['mix-blend-mode'] = 'normal';
+        var layer_TauxdepauvretEPCI_255265_15 = new L.geoJson(json_TauxdepauvretEPCI_255265_15, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TauxdepauvretEPCI_255265_15',
+            layerName: 'layer_TauxdepauvretEPCI_255265_15',
+            pane: 'pane_TauxdepauvretEPCI_255265_15',
+            onEachFeature: pop_TauxdepauvretEPCI_255265_15,
+            style: style_TauxdepauvretEPCI_255265_15_0,
+        });
+        bounds_group.addLayer(layer_TauxdepauvretEPCI_255265_15);
+        function pop_TauxdepauvretEPCI_215225_16(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="sdci_2016"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['sdci_2016'] !== null ? autolinker.link(feature.properties['sdci_2016'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_1"colspan="2"><strong>Revenu médian (en €)</strong><br />' + (feature.properties['Gard - d_1'] !== null ? autolinker.link(feature.properties['Gard - d_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_2"colspan="2"><strong>Taux de pauvreté (en %)</strong><br />' + (feature.properties['Gard - d_2'] !== null ? autolinker.link(feature.properties['Gard - d_2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TauxdepauvretEPCI_215225_16_0() {
+            return {
+                pane: 'pane_TauxdepauvretEPCI_215225_16',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.7)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,35,35,0.7)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TauxdepauvretEPCI_215225_16');
+        map.getPane('pane_TauxdepauvretEPCI_215225_16').style.zIndex = 416;
+        map.getPane('pane_TauxdepauvretEPCI_215225_16').style['mix-blend-mode'] = 'normal';
+        var layer_TauxdepauvretEPCI_215225_16 = new L.geoJson(json_TauxdepauvretEPCI_215225_16, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TauxdepauvretEPCI_215225_16',
+            layerName: 'layer_TauxdepauvretEPCI_215225_16',
+            pane: 'pane_TauxdepauvretEPCI_215225_16',
+            onEachFeature: pop_TauxdepauvretEPCI_215225_16,
+            style: style_TauxdepauvretEPCI_215225_16_0,
+        });
+        bounds_group.addLayer(layer_TauxdepauvretEPCI_215225_16);
+        function pop_TauxdepauvretEPCI_174194_17(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="sdci_2016"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['sdci_2016'] !== null ? autolinker.link(feature.properties['sdci_2016'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_1"colspan="2"><strong>Revenu médian (en €)</strong><br />' + (feature.properties['Gard - d_1'] !== null ? autolinker.link(feature.properties['Gard - d_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_2"colspan="2"><strong>Taux de pauvreté (en %)</strong><br />' + (feature.properties['Gard - d_2'] !== null ? autolinker.link(feature.properties['Gard - d_2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TauxdepauvretEPCI_174194_17_0() {
+            return {
+                pane: 'pane_TauxdepauvretEPCI_174194_17',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.7)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,169,169,0.7)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TauxdepauvretEPCI_174194_17');
+        map.getPane('pane_TauxdepauvretEPCI_174194_17').style.zIndex = 417;
+        map.getPane('pane_TauxdepauvretEPCI_174194_17').style['mix-blend-mode'] = 'normal';
+        var layer_TauxdepauvretEPCI_174194_17 = new L.geoJson(json_TauxdepauvretEPCI_174194_17, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TauxdepauvretEPCI_174194_17',
+            layerName: 'layer_TauxdepauvretEPCI_174194_17',
+            pane: 'pane_TauxdepauvretEPCI_174194_17',
+            onEachFeature: pop_TauxdepauvretEPCI_174194_17,
+            style: style_TauxdepauvretEPCI_174194_17_0,
+        });
+        bounds_group.addLayer(layer_TauxdepauvretEPCI_174194_17);
+        function pop_TauxdepauvretEPCI_138168_18(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="sdci_2016"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['sdci_2016'] !== null ? autolinker.link(feature.properties['sdci_2016'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_1"colspan="2"><strong>Revenu médian (en €)</strong><br />' + (feature.properties['Gard - d_1'] !== null ? autolinker.link(feature.properties['Gard - d_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_2"colspan="2"><strong>Taux de pauvreté (en %)</strong><br />' + (feature.properties['Gard - d_2'] !== null ? autolinker.link(feature.properties['Gard - d_2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TauxdepauvretEPCI_138168_18_0() {
+            return {
+                pane: 'pane_TauxdepauvretEPCI_138168_18',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.7)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(249,221,210,0.7)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TauxdepauvretEPCI_138168_18');
+        map.getPane('pane_TauxdepauvretEPCI_138168_18').style.zIndex = 418;
+        map.getPane('pane_TauxdepauvretEPCI_138168_18').style['mix-blend-mode'] = 'normal';
+        var layer_TauxdepauvretEPCI_138168_18 = new L.geoJson(json_TauxdepauvretEPCI_138168_18, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TauxdepauvretEPCI_138168_18',
+            layerName: 'layer_TauxdepauvretEPCI_138168_18',
+            pane: 'pane_TauxdepauvretEPCI_138168_18',
+            onEachFeature: pop_TauxdepauvretEPCI_138168_18,
+            style: style_TauxdepauvretEPCI_138168_18_0,
+        });
+        bounds_group.addLayer(layer_TauxdepauvretEPCI_138168_18);
+        function pop_TauxdepauvretEPCI_105_19(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="sdci_2016"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['sdci_2016'] !== null ? autolinker.link(feature.properties['sdci_2016'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_1"colspan="2"><strong>Revenu médian (en €)</strong><br />' + (feature.properties['Gard - d_1'] !== null ? autolinker.link(feature.properties['Gard - d_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Gard - d_2"colspan="2"><strong>Taux de pauvreté (en %)</strong><br />' + (feature.properties['Gard - d_2'] !== null ? autolinker.link(feature.properties['Gard - d_2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TauxdepauvretEPCI_105_19_0() {
+            return {
+                pane: 'pane_TauxdepauvretEPCI_105_19',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.7)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,245,240,0.7)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TauxdepauvretEPCI_105_19');
+        map.getPane('pane_TauxdepauvretEPCI_105_19').style.zIndex = 419;
+        map.getPane('pane_TauxdepauvretEPCI_105_19').style['mix-blend-mode'] = 'normal';
+        var layer_TauxdepauvretEPCI_105_19 = new L.geoJson(json_TauxdepauvretEPCI_105_19, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TauxdepauvretEPCI_105_19',
+            layerName: 'layer_TauxdepauvretEPCI_105_19',
+            pane: 'pane_TauxdepauvretEPCI_105_19',
+            onEachFeature: pop_TauxdepauvretEPCI_105_19,
+            style: style_TauxdepauvretEPCI_105_19_0,
+        });
+        bounds_group.addLayer(layer_TauxdepauvretEPCI_105_19);
+        function pop_QPVGard_20(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="code_du_qu"colspan="2"><strong>Code du quartier </strong><br />' + (feature.properties['code_du_qu'] !== null ? autolinker.link(feature.properties['code_du_qu'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="nom_du_qua"colspan="2"><strong>Nom du quartier</strong><br />' + (feature.properties['nom_du_qua'] !== null ? autolinker.link(feature.properties['nom_du_qua'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="commune"colspan="2"><strong>Commune</strong><br />' + (feature.properties['commune'] !== null ? autolinker.link(feature.properties['commune'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="epci"colspan="2"><strong>EPCI</strong><br />' + (feature.properties['epci'] !== null ? autolinker.link(feature.properties['epci'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Médiane d"colspan="2"><strong>Médiane du niveau de vie</strong><br />' + (feature.properties['Médiane d'] !== null ? autolinker.link(feature.properties['Médiane d'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Taux de pa"colspan="2"><strong>Taux de pauvreté </strong><br />' + (feature.properties['Taux de pa'] !== null ? autolinker.link(feature.properties['Taux de pa'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Part des p"colspan="2"><strong>Part des personnes de 15 à 64 ans ayant un emploi</strong><br />' + (feature.properties['Part des p'] !== null ? autolinker.link(feature.properties['Part des p'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_QPVGard_20_0() {
+            return {
+                pane: 'pane_QPVGard_20',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(251,0,33,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_QPVGard_20');
+        map.getPane('pane_QPVGard_20').style.zIndex = 420;
+        map.getPane('pane_QPVGard_20').style['mix-blend-mode'] = 'normal';
+        var layer_QPVGard_20 = new L.geoJson(json_QPVGard_20, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_QPVGard_20',
+            layerName: 'layer_QPVGard_20',
+            pane: 'pane_QPVGard_20',
+            onEachFeature: pop_QPVGard_20,
+            style: style_QPVGard_20_0,
+        });
+        bounds_group.addLayer(layer_QPVGard_20);
+        function pop_CommunesavecQPV_21(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_CommunesavecQPV_21_0() {
+            return {
+                pane: 'pane_CommunesavecQPV_21',
+                opacity: 1,
+                color: 'rgba(228,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_CommunesavecQPV_21');
+        map.getPane('pane_CommunesavecQPV_21').style.zIndex = 421;
+        map.getPane('pane_CommunesavecQPV_21').style['mix-blend-mode'] = 'normal';
+        var layer_CommunesavecQPV_21 = new L.geoJson(json_CommunesavecQPV_21, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CommunesavecQPV_21',
+            layerName: 'layer_CommunesavecQPV_21',
+            pane: 'pane_CommunesavecQPV_21',
+            onEachFeature: pop_CommunesavecQPV_21,
+            style: style_CommunesavecQPV_21_0,
+        });
+        bounds_group.addLayer(layer_CommunesavecQPV_21);
+        function pop_CommunesnondesserviespasTC_22(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_CommunesnondesserviespasTC_22_0() {
+            return {
+                pane: 'pane_CommunesnondesserviespasTC_22',
+                opacity: 1,
+                color: 'rgba(159,18,172,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,26,28,0.10980392156862745)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_CommunesnondesserviespasTC_22');
+        map.getPane('pane_CommunesnondesserviespasTC_22').style.zIndex = 422;
+        map.getPane('pane_CommunesnondesserviespasTC_22').style['mix-blend-mode'] = 'normal';
+        var layer_CommunesnondesserviespasTC_22 = new L.geoJson(json_CommunesnondesserviespasTC_22, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CommunesnondesserviespasTC_22',
+            layerName: 'layer_CommunesnondesserviespasTC_22',
+            pane: 'pane_CommunesnondesserviespasTC_22',
+            onEachFeature: pop_CommunesnondesserviespasTC_22,
+            style: style_CommunesnondesserviespasTC_22_0,
+        });
+        bounds_group.addLayer(layer_CommunesnondesserviespasTC_22);
+        function pop_Communesdesserviesparlerseauinterurbain_23(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        var pattern_Communesdesserviesparlerseauinterurbain_23_0 = new L.StripePattern({
+            weight: 0.8,
+            spaceWeight: 2.0,
+            color: '#e31a1c',
+            opacity: 1.0,
+            spaceOpacity: 0,
+            angle: 225
+        });
+        pattern_Communesdesserviesparlerseauinterurbain_23_0.addTo(map);
+        function style_Communesdesserviesparlerseauinterurbain_23_0() {
+            return {
+                pane: 'pane_Communesdesserviesparlerseauinterurbain_23',
+                stroke: false,
+                fillOpacity: 1,
+                fillPattern: pattern_Communesdesserviesparlerseauinterurbain_23_0,
+                interactive: true,
+            }
+        }
+        function style_Communesdesserviesparlerseauinterurbain_23_1() {
+            return {
+                pane: 'pane_Communesdesserviesparlerseauinterurbain_23',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Communesdesserviesparlerseauinterurbain_23');
+        map.getPane('pane_Communesdesserviesparlerseauinterurbain_23').style.zIndex = 423;
+        map.getPane('pane_Communesdesserviesparlerseauinterurbain_23').style['mix-blend-mode'] = 'normal';
+        var layer_Communesdesserviesparlerseauinterurbain_23 = new L.geoJson.multiStyle(json_Communesdesserviesparlerseauinterurbain_23, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Communesdesserviesparlerseauinterurbain_23',
+            layerName: 'layer_Communesdesserviesparlerseauinterurbain_23',
+            pane: 'pane_Communesdesserviesparlerseauinterurbain_23',
+            onEachFeature: pop_Communesdesserviesparlerseauinterurbain_23,
+            styles: [style_Communesdesserviesparlerseauinterurbain_23_0,style_Communesdesserviesparlerseauinterurbain_23_1,]
+        });
+        bounds_group.addLayer(layer_Communesdesserviesparlerseauinterurbain_23);
+        function pop_Lignesinterurbaines_24(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_short"colspan="2"><strong>Numéro</strong><br />' + (feature.properties['route_short'] !== null ? autolinker.link(feature.properties['route_short'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_long_"colspan="2"><strong>Nom ligne</strong><br />' + (feature.properties['route_long_'] !== null ? autolinker.link(feature.properties['route_long_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_type"colspan="2"><strong>Type</strong><br />' + (feature.properties['route_type'] !== null ? autolinker.link(feature.properties['route_type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Lignesinterurbaines_24_0() {
+            return {
+                pane: 'pane_Lignesinterurbaines_24',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        function style_Lignesinterurbaines_24_1() {
+            return {
+                pane: 'pane_Lignesinterurbaines_24',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Lignesinterurbaines_24');
+        map.getPane('pane_Lignesinterurbaines_24').style.zIndex = 424;
+        map.getPane('pane_Lignesinterurbaines_24').style['mix-blend-mode'] = 'normal';
+        var layer_Lignesinterurbaines_24 = new L.geoJson.multiStyle(json_Lignesinterurbaines_24, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Lignesinterurbaines_24',
+            layerName: 'layer_Lignesinterurbaines_24',
+            pane: 'pane_Lignesinterurbaines_24',
+            onEachFeature: pop_Lignesinterurbaines_24,
+            styles: [style_Lignesinterurbaines_24_0,style_Lignesinterurbaines_24_1,]
+        });
+        bounds_group.addLayer(layer_Lignesinterurbaines_24);
+        function pop_TransportAvignon_25(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="stop_name"colspan="2"><strong>Arrêt</strong><br />' + (feature.properties['stop_name'] !== null ? autolinker.link(feature.properties['stop_name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TransportAvignon_25_0() {
+            return {
+                pane: 'pane_TransportAvignon_25',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(54,168,88,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,0,51,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TransportAvignon_25');
+        map.getPane('pane_TransportAvignon_25').style.zIndex = 425;
+        map.getPane('pane_TransportAvignon_25').style['mix-blend-mode'] = 'normal';
+        var layer_TransportAvignon_25 = new L.geoJson(json_TransportAvignon_25, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TransportAvignon_25',
+            layerName: 'layer_TransportAvignon_25',
+            pane: 'pane_TransportAvignon_25',
+            onEachFeature: pop_TransportAvignon_25,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_TransportAvignon_25_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_TransportAvignon_25);
+        function pop_TransportBagnolsSurCze_26(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ligne"colspan="2"><strong>Ligne</strong><br />' + (feature.properties['Ligne'] !== null ? autolinker.link(feature.properties['Ligne'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TransportBagnolsSurCze_26_0() {
+            return {
+                pane: 'pane_TransportBagnolsSurCze_26',
+                opacity: 1,
+                color: 'rgba(84,176,74,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TransportBagnolsSurCze_26');
+        map.getPane('pane_TransportBagnolsSurCze_26').style.zIndex = 426;
+        map.getPane('pane_TransportBagnolsSurCze_26').style['mix-blend-mode'] = 'normal';
+        var layer_TransportBagnolsSurCze_26 = new L.geoJson(json_TransportBagnolsSurCze_26, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TransportBagnolsSurCze_26',
+            layerName: 'layer_TransportBagnolsSurCze_26',
+            pane: 'pane_TransportBagnolsSurCze_26',
+            onEachFeature: pop_TransportBagnolsSurCze_26,
+            style: style_TransportBagnolsSurCze_26_0,
+        });
+        bounds_group.addLayer(layer_TransportBagnolsSurCze_26);
+        function pop_UGGOarrtsdebus_27(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Arrêt"colspan="2"><strong>Arrêt</strong><br />' + (feature.properties['Arrêt'] !== null ? autolinker.link(feature.properties['Arrêt'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_UGGOarrtsdebus_27_0() {
+            return {
+                pane: 'pane_UGGOarrtsdebus_27',
+                radius: 2.8,
+                opacity: 1,
+                color: 'rgba(51,160,44,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,212,7,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_UGGOarrtsdebus_27');
+        map.getPane('pane_UGGOarrtsdebus_27').style.zIndex = 427;
+        map.getPane('pane_UGGOarrtsdebus_27').style['mix-blend-mode'] = 'normal';
+        var layer_UGGOarrtsdebus_27 = new L.geoJson(json_UGGOarrtsdebus_27, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_UGGOarrtsdebus_27',
+            layerName: 'layer_UGGOarrtsdebus_27',
+            pane: 'pane_UGGOarrtsdebus_27',
+            onEachFeature: pop_UGGOarrtsdebus_27,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_UGGOarrtsdebus_27_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_UGGOarrtsdebus_27);
+        function pop_CommunesdesserviesparTCAlesetsapriphrie_28(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        var pattern_CommunesdesserviesparTCAlesetsapriphrie_28_0 = new L.StripePattern({
+            weight: 0.8,
+            spaceWeight: 2.0,
+            color: '#00caec',
+            opacity: 1.0,
+            spaceOpacity: 0,
+            angle: 225
+        });
+        pattern_CommunesdesserviesparTCAlesetsapriphrie_28_0.addTo(map);
+        function style_CommunesdesserviesparTCAlesetsapriphrie_28_0() {
+            return {
+                pane: 'pane_CommunesdesserviesparTCAlesetsapriphrie_28',
+                stroke: false,
+                fillOpacity: 1,
+                fillPattern: pattern_CommunesdesserviesparTCAlesetsapriphrie_28_0,
+                interactive: true,
+            }
+        }
+        function style_CommunesdesserviesparTCAlesetsapriphrie_28_1() {
+            return {
+                pane: 'pane_CommunesdesserviesparTCAlesetsapriphrie_28',
+                opacity: 1,
+                color: 'rgba(0,202,236,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_CommunesdesserviesparTCAlesetsapriphrie_28');
+        map.getPane('pane_CommunesdesserviesparTCAlesetsapriphrie_28').style.zIndex = 428;
+        map.getPane('pane_CommunesdesserviesparTCAlesetsapriphrie_28').style['mix-blend-mode'] = 'normal';
+        var layer_CommunesdesserviesparTCAlesetsapriphrie_28 = new L.geoJson.multiStyle(json_CommunesdesserviesparTCAlesetsapriphrie_28, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CommunesdesserviesparTCAlesetsapriphrie_28',
+            layerName: 'layer_CommunesdesserviesparTCAlesetsapriphrie_28',
+            pane: 'pane_CommunesdesserviesparTCAlesetsapriphrie_28',
+            onEachFeature: pop_CommunesdesserviesparTCAlesetsapriphrie_28,
+            styles: [style_CommunesdesserviesparTCAlesetsapriphrie_28_0,style_CommunesdesserviesparTCAlesetsapriphrie_28_1,]
+        });
+        bounds_group.addLayer(layer_CommunesdesserviesparTCAlesetsapriphrie_28);
+        function pop_TransportAlsetpriphrie_29(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_id"colspan="2"><strong>Numéro</strong><br />' + (feature.properties['route_id'] !== null ? autolinker.link(feature.properties['route_id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_long_"colspan="2"><strong>Nom ligne</strong><br />' + (feature.properties['route_long_'] !== null ? autolinker.link(feature.properties['route_long_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_type"colspan="2"><strong>Type</strong><br />' + (feature.properties['route_type'] !== null ? autolinker.link(feature.properties['route_type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TransportAlsetpriphrie_29_0() {
+            return {
+                pane: 'pane_TransportAlsetpriphrie_29',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        function style_TransportAlsetpriphrie_29_1() {
+            return {
+                pane: 'pane_TransportAlsetpriphrie_29',
+                opacity: 1,
+                color: 'rgba(166,206,227,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TransportAlsetpriphrie_29');
+        map.getPane('pane_TransportAlsetpriphrie_29').style.zIndex = 429;
+        map.getPane('pane_TransportAlsetpriphrie_29').style['mix-blend-mode'] = 'normal';
+        var layer_TransportAlsetpriphrie_29 = new L.geoJson.multiStyle(json_TransportAlsetpriphrie_29, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TransportAlsetpriphrie_29',
+            layerName: 'layer_TransportAlsetpriphrie_29',
+            pane: 'pane_TransportAlsetpriphrie_29',
+            onEachFeature: pop_TransportAlsetpriphrie_29,
+            styles: [style_TransportAlsetpriphrie_29_0,style_TransportAlsetpriphrie_29_1,]
+        });
+        bounds_group.addLayer(layer_TransportAlsetpriphrie_29);
+        function pop_CommunesdanslerseauTANGO_30(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        var pattern_CommunesdanslerseauTANGO_30_0 = new L.StripePattern({
+            weight: 0.8,
+            spaceWeight: 2.0,
+            color: '#0000ec',
+            opacity: 1.0,
+            spaceOpacity: 0,
+            angle: 225
+        });
+        pattern_CommunesdanslerseauTANGO_30_0.addTo(map);
+        function style_CommunesdanslerseauTANGO_30_0() {
+            return {
+                pane: 'pane_CommunesdanslerseauTANGO_30',
+                stroke: false,
+                fillOpacity: 1,
+                fillPattern: pattern_CommunesdanslerseauTANGO_30_0,
+                interactive: true,
+            }
+        }
+        function style_CommunesdanslerseauTANGO_30_1() {
+            return {
+                pane: 'pane_CommunesdanslerseauTANGO_30',
+                opacity: 1,
+                color: 'rgba(12,12,236,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_CommunesdanslerseauTANGO_30');
+        map.getPane('pane_CommunesdanslerseauTANGO_30').style.zIndex = 430;
+        map.getPane('pane_CommunesdanslerseauTANGO_30').style['mix-blend-mode'] = 'normal';
+        var layer_CommunesdanslerseauTANGO_30 = new L.geoJson.multiStyle(json_CommunesdanslerseauTANGO_30, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CommunesdanslerseauTANGO_30',
+            layerName: 'layer_CommunesdanslerseauTANGO_30',
+            pane: 'pane_CommunesdanslerseauTANGO_30',
+            onEachFeature: pop_CommunesdanslerseauTANGO_30,
+            styles: [style_CommunesdanslerseauTANGO_30_0,style_CommunesdanslerseauTANGO_30_1,]
+        });
+        bounds_group.addLayer(layer_CommunesdanslerseauTANGO_30);
+        function pop_Tangolignesdebus_31(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="route_long"colspan="2"><strong>route</strong><br />' + (feature.properties['route_long'] !== null ? autolinker.link(feature.properties['route_long'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Tangolignesdebus_31_0() {
+            return {
+                pane: 'pane_Tangolignesdebus_31',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        function style_Tangolignesdebus_31_1() {
+            return {
+                pane: 'pane_Tangolignesdebus_31',
+                opacity: 1,
+                color: 'rgba(39,105,197,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Tangolignesdebus_31');
+        map.getPane('pane_Tangolignesdebus_31').style.zIndex = 431;
+        map.getPane('pane_Tangolignesdebus_31').style['mix-blend-mode'] = 'normal';
+        var layer_Tangolignesdebus_31 = new L.geoJson.multiStyle(json_Tangolignesdebus_31, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Tangolignesdebus_31',
+            layerName: 'layer_Tangolignesdebus_31',
+            pane: 'pane_Tangolignesdebus_31',
+            onEachFeature: pop_Tangolignesdebus_31,
+            styles: [style_Tangolignesdebus_31_0,style_Tangolignesdebus_31_1,]
+        });
+        bounds_group.addLayer(layer_Tangolignesdebus_31);
+        function pop_Tangoarrtsdebus_32(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="name"colspan="2"><strong>nom arrêt</strong><br />' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Tangoarrtsdebus_32_0() {
+            return {
+                pane: 'pane_Tangoarrtsdebus_32',
+                radius: 2.8,
+                opacity: 1,
+                color: 'rgba(35,35,249,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,212,7,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Tangoarrtsdebus_32');
+        map.getPane('pane_Tangoarrtsdebus_32').style.zIndex = 432;
+        map.getPane('pane_Tangoarrtsdebus_32').style['mix-blend-mode'] = 'normal';
+        var layer_Tangoarrtsdebus_32 = new L.geoJson(json_Tangoarrtsdebus_32, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Tangoarrtsdebus_32',
+            layerName: 'layer_Tangoarrtsdebus_32',
+            pane: 'pane_Tangoarrtsdebus_32',
+            onEachFeature: pop_Tangoarrtsdebus_32,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Tangoarrtsdebus_32_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Tangoarrtsdebus_32);
+        function pop_Communesavecaidealimentaire_33(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="libgeo"colspan="2"><strong>Commune</strong><br />' + (feature.properties['libgeo'] !== null ? autolinker.link(feature.properties['libgeo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Communesavecaidealimentaire_33_0() {
+            return {
+                pane: 'pane_Communesavecaidealimentaire_33',
+                opacity: 1,
+                color: 'rgba(255,224,121,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,191,111,0.49411764705882355)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Communesavecaidealimentaire_33');
+        map.getPane('pane_Communesavecaidealimentaire_33').style.zIndex = 433;
+        map.getPane('pane_Communesavecaidealimentaire_33').style['mix-blend-mode'] = 'normal';
+        var layer_Communesavecaidealimentaire_33 = new L.geoJson(json_Communesavecaidealimentaire_33, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Communesavecaidealimentaire_33',
+            layerName: 'layer_Communesavecaidealimentaire_33',
+            pane: 'pane_Communesavecaidealimentaire_33',
+            onEachFeature: pop_Communesavecaidealimentaire_33,
+            style: style_Communesavecaidealimentaire_33_0,
+        });
+        bounds_group.addLayer(layer_Communesavecaidealimentaire_33);
+        map.addLayer(layer_Communesavecaidealimentaire_33);
+        function pop_Autresassociationshabilites_34(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commune"colspan="2"><strong>Commune</strong><br />' + (feature.properties['Commune'] !== null ? autolinker.link(feature.properties['Commune'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Horaires"colspan="2"><strong>Horaires</strong><br />' + (feature.properties['Horaires'] !== null ? autolinker.link(feature.properties['Horaires'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Produits"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Produits'] !== null ? autolinker.link(feature.properties['Produits'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Contact"colspan="2"><strong>Contact</strong><br />' + (feature.properties['Contact'] !== null ? autolinker.link(feature.properties['Contact'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Email"colspan="2"><strong>Email</strong><br />' + (feature.properties['Email'] !== null ? autolinker.link(feature.properties['Email'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Autresassociationshabilites_34_0() {
+            return {
+                pane: 'pane_Autresassociationshabilites_34',
+                shape: 'square',
+                radius: 4.4,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(35,241,220,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Autresassociationshabilites_34');
+        map.getPane('pane_Autresassociationshabilites_34').style.zIndex = 434;
+        map.getPane('pane_Autresassociationshabilites_34').style['mix-blend-mode'] = 'normal';
+        var layer_Autresassociationshabilites_34 = new L.geoJson(json_Autresassociationshabilites_34, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Autresassociationshabilites_34',
+            layerName: 'layer_Autresassociationshabilites_34',
+            pane: 'pane_Autresassociationshabilites_34',
+            onEachFeature: pop_Autresassociationshabilites_34,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Autresassociationshabilites_34_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Autresassociationshabilites_34);
+        map.addLayer(layer_Autresassociationshabilites_34);
+        function pop_Dispositifsitinrantsnonpartenaires_35(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commune"colspan="2"><strong>Commune</strong><br />' + (feature.properties['Commune'] !== null ? autolinker.link(feature.properties['Commune'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Passage"colspan="2"><strong>Passage</strong><br />' + (feature.properties['Passage'] !== null ? autolinker.link(feature.properties['Passage'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Produits"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Produits'] !== null ? autolinker.link(feature.properties['Produits'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type de di"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Type de di'] !== null ? autolinker.link(feature.properties['Type de di'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Informatio"colspan="2"><strong>Infos</strong><br />' + (feature.properties['Informatio'] !== null ? autolinker.link(feature.properties['Informatio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Mail"colspan="2"><strong>Mail</strong><br />' + (feature.properties['Mail'] !== null ? autolinker.link(feature.properties['Mail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tel"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Tel'] !== null ? autolinker.link(feature.properties['Tel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Dispositifsitinrantsnonpartenaires_35_0() {
+            return {
+                pane: 'pane_Dispositifsitinrantsnonpartenaires_35',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Dispositifsitinrantsnonpartenaires_35.svg',
+            iconSize: [12.92, 12.92]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Dispositifsitinrantsnonpartenaires_35');
+        map.getPane('pane_Dispositifsitinrantsnonpartenaires_35').style.zIndex = 435;
+        map.getPane('pane_Dispositifsitinrantsnonpartenaires_35').style['mix-blend-mode'] = 'normal';
+        var layer_Dispositifsitinrantsnonpartenaires_35 = new L.geoJson(json_Dispositifsitinrantsnonpartenaires_35, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Dispositifsitinrantsnonpartenaires_35',
+            layerName: 'layer_Dispositifsitinrantsnonpartenaires_35',
+            pane: 'pane_Dispositifsitinrantsnonpartenaires_35',
+            onEachFeature: pop_Dispositifsitinrantsnonpartenaires_35,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_Dispositifsitinrantsnonpartenaires_35_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Dispositifsitinrantsnonpartenaires_35);
+        map.addLayer(layer_Dispositifsitinrantsnonpartenaires_35);
+        function pop_SecoursCatholiquenonpartenaireBA_36(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type produ"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Type produ'] !== null ? autolinker.link(feature.properties['Type produ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tyde distr"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Tyde distr'] !== null ? autolinker.link(feature.properties['Tyde distr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Telephone"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Telephone'] !== null ? autolinker.link(feature.properties['Telephone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Mail"colspan="2"><strong>Mail</strong><br />' + (feature.properties['Mail'] !== null ? autolinker.link(feature.properties['Mail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site inter"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site inter'] !== null ? autolinker.link(feature.properties['Site inter'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ouverture"colspan="2"><strong>Ouverture</strong><br />' + (feature.properties['Ouverture'] !== null ? autolinker.link(feature.properties['Ouverture'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commentair"colspan="2"><strong>Notes</strong><br />' + (feature.properties['Commentair'] !== null ? autolinker.link(feature.properties['Commentair'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_SecoursCatholiquenonpartenaireBA_36_0() {
+            return {
+                pane: 'pane_SecoursCatholiquenonpartenaireBA_36',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/SecoursCatholiquenonpartenaireBA_36.svg',
+            iconSize: [20.52, 20.52]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_SecoursCatholiquenonpartenaireBA_36');
+        map.getPane('pane_SecoursCatholiquenonpartenaireBA_36').style.zIndex = 436;
+        map.getPane('pane_SecoursCatholiquenonpartenaireBA_36').style['mix-blend-mode'] = 'normal';
+        var layer_SecoursCatholiquenonpartenaireBA_36 = new L.geoJson(json_SecoursCatholiquenonpartenaireBA_36, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_SecoursCatholiquenonpartenaireBA_36',
+            layerName: 'layer_SecoursCatholiquenonpartenaireBA_36',
+            pane: 'pane_SecoursCatholiquenonpartenaireBA_36',
+            onEachFeature: pop_SecoursCatholiquenonpartenaireBA_36,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_SecoursCatholiquenonpartenaireBA_36_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_SecoursCatholiquenonpartenaireBA_36);
+        map.addLayer(layer_SecoursCatholiquenonpartenaireBA_36);
+        function pop_SecoursPopulaire_37(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Associatio"colspan="2"><strong>Association</strong><br />' + (feature.properties['Associatio'] !== null ? autolinker.link(feature.properties['Associatio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Lieux de d"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Lieux de d'] !== null ? autolinker.link(feature.properties['Lieux de d'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Horaires"colspan="2"><strong>Horaires</strong><br />' + (feature.properties['Horaires'] !== null ? autolinker.link(feature.properties['Horaires'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type de pr"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Type de pr'] !== null ? autolinker.link(feature.properties['Type de pr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Observatio"colspan="2"><strong>Observations</strong><br />' + (feature.properties['Observatio'] !== null ? autolinker.link(feature.properties['Observatio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Mail"colspan="2"><strong>Mail</strong><br />' + (feature.properties['Mail'] !== null ? autolinker.link(feature.properties['Mail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commentair"colspan="2"><strong>Commentaire</strong><br />' + (feature.properties['Commentair'] !== null ? autolinker.link(feature.properties['Commentair'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_SecoursPopulaire_37_0() {
+            return {
+                pane: 'pane_SecoursPopulaire_37',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/SecoursPopulaire_37.svg',
+            iconSize: [19.0, 19.0]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_SecoursPopulaire_37');
+        map.getPane('pane_SecoursPopulaire_37').style.zIndex = 437;
+        map.getPane('pane_SecoursPopulaire_37').style['mix-blend-mode'] = 'normal';
+        var layer_SecoursPopulaire_37 = new L.geoJson(json_SecoursPopulaire_37, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_SecoursPopulaire_37',
+            layerName: 'layer_SecoursPopulaire_37',
+            pane: 'pane_SecoursPopulaire_37',
+            onEachFeature: pop_SecoursPopulaire_37,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_SecoursPopulaire_37_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_SecoursPopulaire_37);
+        map.addLayer(layer_SecoursPopulaire_37);
+        function pop_RestosduCoeur_38(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Associatio"colspan="2"><strong>Association</strong><br />' + (feature.properties['Associatio'] !== null ? autolinker.link(feature.properties['Associatio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Lieux de d"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Lieux de d'] !== null ? autolinker.link(feature.properties['Lieux de d'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Horaires"colspan="2"><strong>Horaires</strong><br />' + (feature.properties['Horaires'] !== null ? autolinker.link(feature.properties['Horaires'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type de pr"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Type de pr'] !== null ? autolinker.link(feature.properties['Type de pr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Mail"colspan="2"><strong>Mail</strong><br />' + (feature.properties['Mail'] !== null ? autolinker.link(feature.properties['Mail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tel"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Tel'] !== null ? autolinker.link(feature.properties['Tel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_RestosduCoeur_38_0() {
+            return {
+                pane: 'pane_RestosduCoeur_38',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/RestosduCoeur_38.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_RestosduCoeur_38');
+        map.getPane('pane_RestosduCoeur_38').style.zIndex = 438;
+        map.getPane('pane_RestosduCoeur_38').style['mix-blend-mode'] = 'normal';
+        var layer_RestosduCoeur_38 = new L.geoJson(json_RestosduCoeur_38, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_RestosduCoeur_38',
+            layerName: 'layer_RestosduCoeur_38',
+            pane: 'pane_RestosduCoeur_38',
+            onEachFeature: pop_RestosduCoeur_38,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_RestosduCoeur_38_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_RestosduCoeur_38);
+        map.addLayer(layer_RestosduCoeur_38);
+        function pop_Autresassociationspartenaires_39(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="CP"colspan="2"><strong>CP</strong><br />' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="produits"colspan="2"><strong>produits</strong><br />' + (feature.properties['produits'] !== null ? autolinker.link(feature.properties['produits'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tyde distr"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Tyde distr'] !== null ? autolinker.link(feature.properties['Tyde distr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Telephone"colspan="2"><strong>Telephone</strong><br />' + (feature.properties['Telephone'] !== null ? autolinker.link(feature.properties['Telephone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Mail"colspan="2"><strong>Mail</strong><br />' + (feature.properties['Mail'] !== null ? autolinker.link(feature.properties['Mail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ouverture"colspan="2"><strong>Ouverture</strong><br />' + (feature.properties['Ouverture'] !== null ? autolinker.link(feature.properties['Ouverture'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Autresassociationspartenaires_39_0() {
+            return {
+                pane: 'pane_Autresassociationspartenaires_39',
+                shape: 'square',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,127,0,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Autresassociationspartenaires_39');
+        map.getPane('pane_Autresassociationspartenaires_39').style.zIndex = 439;
+        map.getPane('pane_Autresassociationspartenaires_39').style['mix-blend-mode'] = 'normal';
+        var layer_Autresassociationspartenaires_39 = new L.geoJson(json_Autresassociationspartenaires_39, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Autresassociationspartenaires_39',
+            layerName: 'layer_Autresassociationspartenaires_39',
+            pane: 'pane_Autresassociationspartenaires_39',
+            onEachFeature: pop_Autresassociationspartenaires_39,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Autresassociationspartenaires_39_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Autresassociationspartenaires_39);
+        map.addLayer(layer_Autresassociationspartenaires_39);
+        function pop_CCASpartenaires_40(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Horaires"colspan="2"><strong>Horaires</strong><br />' + (feature.properties['Horaires'] !== null ? autolinker.link(feature.properties['Horaires'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Telephone"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Telephone'] !== null ? autolinker.link(feature.properties['Telephone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="distributi"colspan="2"><strong>Type de distribution </strong><br />' + (feature.properties['distributi'] !== null ? autolinker.link(feature.properties['distributi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Liens"colspan="2"><strong>Liens</strong><br />' + (feature.properties['Liens'] !== null ? autolinker.link(feature.properties['Liens'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commentair"colspan="2"><strong>Notes</strong><br />' + (feature.properties['Commentair'] !== null ? autolinker.link(feature.properties['Commentair'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_CCASpartenaires_40_0() {
+            return {
+                pane: 'pane_CCASpartenaires_40',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/CCASpartenaires_40.svg',
+            iconSize: [19.0, 19.0]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_CCASpartenaires_40');
+        map.getPane('pane_CCASpartenaires_40').style.zIndex = 440;
+        map.getPane('pane_CCASpartenaires_40').style['mix-blend-mode'] = 'normal';
+        var layer_CCASpartenaires_40 = new L.geoJson(json_CCASpartenaires_40, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CCASpartenaires_40',
+            layerName: 'layer_CCASpartenaires_40',
+            pane: 'pane_CCASpartenaires_40',
+            onEachFeature: pop_CCASpartenaires_40,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_CCASpartenaires_40_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_CCASpartenaires_40);
+        map.addLayer(layer_CCASpartenaires_40);
+        function pop_CroixRouge_41(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Latitude"colspan="2"><strong>Latitude</strong><br />' + (feature.properties['Latitude'] !== null ? autolinker.link(feature.properties['Latitude'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type produ"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Type produ'] !== null ? autolinker.link(feature.properties['Type produ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tyde distr"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Tyde distr'] !== null ? autolinker.link(feature.properties['Tyde distr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Telephone"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Telephone'] !== null ? autolinker.link(feature.properties['Telephone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site inter"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site inter'] !== null ? autolinker.link(feature.properties['Site inter'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ouverture"colspan="2"><strong>Ouverture</strong><br />' + (feature.properties['Ouverture'] !== null ? autolinker.link(feature.properties['Ouverture'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Email"colspan="2"><strong>Email</strong><br />' + (feature.properties['Email'] !== null ? autolinker.link(feature.properties['Email'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commentair"colspan="2"><strong>Notes</strong><br />' + (feature.properties['Commentair'] !== null ? autolinker.link(feature.properties['Commentair'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_CroixRouge_41_0() {
+            return {
+                pane: 'pane_CroixRouge_41',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/CroixRouge_41.svg',
+            iconSize: [19.0, 19.0]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_CroixRouge_41');
+        map.getPane('pane_CroixRouge_41').style.zIndex = 441;
+        map.getPane('pane_CroixRouge_41').style['mix-blend-mode'] = 'normal';
+        var layer_CroixRouge_41 = new L.geoJson(json_CroixRouge_41, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CroixRouge_41',
+            layerName: 'layer_CroixRouge_41',
+            pane: 'pane_CroixRouge_41',
+            onEachFeature: pop_CroixRouge_41,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_CroixRouge_41_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_CroixRouge_41);
+        map.addLayer(layer_CroixRouge_41);
+        function pop_SecoursCatholique_42(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Association</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ville"colspan="2"><strong>Ville</strong><br />' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type produ"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Type produ'] !== null ? autolinker.link(feature.properties['Type produ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Tyde distr"colspan="2"><strong>Distribution</strong><br />' + (feature.properties['Tyde distr'] !== null ? autolinker.link(feature.properties['Tyde distr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Telephone"colspan="2"><strong>Tel</strong><br />' + (feature.properties['Telephone'] !== null ? autolinker.link(feature.properties['Telephone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Mail"colspan="2"><strong>Mail</strong><br />' + (feature.properties['Mail'] !== null ? autolinker.link(feature.properties['Mail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Site inter"colspan="2"><strong>Site</strong><br />' + (feature.properties['Site inter'] !== null ? autolinker.link(feature.properties['Site inter'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Ouverture"colspan="2"><strong>Ouverture</strong><br />' + (feature.properties['Ouverture'] !== null ? autolinker.link(feature.properties['Ouverture'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Commentair"colspan="2"><strong>Notes</strong><br />' + (feature.properties['Commentair'] !== null ? autolinker.link(feature.properties['Commentair'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_SecoursCatholique_42_0() {
+            return {
+                pane: 'pane_SecoursCatholique_42',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/SecoursCatholique_42.svg',
+            iconSize: [19.0, 19.0]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_SecoursCatholique_42');
+        map.getPane('pane_SecoursCatholique_42').style.zIndex = 442;
+        map.getPane('pane_SecoursCatholique_42').style['mix-blend-mode'] = 'normal';
+        var layer_SecoursCatholique_42 = new L.geoJson(json_SecoursCatholique_42, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_SecoursCatholique_42',
+            layerName: 'layer_SecoursCatholique_42',
+            pane: 'pane_SecoursCatholique_42',
+            onEachFeature: pop_SecoursCatholique_42,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_SecoursCatholique_42_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_SecoursCatholique_42);
+        map.addLayer(layer_SecoursCatholique_42);
+        function pop_LOrdredeMalte_43(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Associatio"colspan="2"><strong>Réseau</strong><br />' + (feature.properties['Associatio'] !== null ? autolinker.link(feature.properties['Associatio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Lieux de d"colspan="2"><strong>Distribution </strong><br />' + (feature.properties['Lieux de d'] !== null ? autolinker.link(feature.properties['Lieux de d'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Horaires"colspan="2"><strong>Horaires</strong><br />' + (feature.properties['Horaires'] !== null ? autolinker.link(feature.properties['Horaires'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Type de pr"colspan="2"><strong>Produits</strong><br />' + (feature.properties['Type de pr'] !== null ? autolinker.link(feature.properties['Type de pr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Observatio"colspan="2"><strong>Notes</strong><br />' + (feature.properties['Observatio'] !== null ? autolinker.link(feature.properties['Observatio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_LOrdredeMalte_43_0() {
+            return {
+                pane: 'pane_LOrdredeMalte_43',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/LOrdredeMalte_43.svg',
+            iconSize: [19.0, 19.0]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_LOrdredeMalte_43');
+        map.getPane('pane_LOrdredeMalte_43').style.zIndex = 443;
+        map.getPane('pane_LOrdredeMalte_43').style['mix-blend-mode'] = 'normal';
+        var layer_LOrdredeMalte_43 = new L.geoJson(json_LOrdredeMalte_43, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_LOrdredeMalte_43',
+            layerName: 'layer_LOrdredeMalte_43',
+            pane: 'pane_LOrdredeMalte_43',
+            onEachFeature: pop_LOrdredeMalte_43,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_LOrdredeMalte_43_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_LOrdredeMalte_43);
+        map.addLayer(layer_LOrdredeMalte_43);
+        function pop_BanqueAlimentaireduGard_44(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Nom"colspan="2"><strong>Nom</strong><br />' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Adresse"colspan="2"><strong>Adresse</strong><br />' + (feature.properties['Adresse'] !== null ? autolinker.link(feature.properties['Adresse'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? autolinker.link(feature.properties['CP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Ville'] !== null ? autolinker.link(feature.properties['Ville'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_BanqueAlimentaireduGard_44_0() {
+            return {
+                pane: 'pane_BanqueAlimentaireduGard_44',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/BanqueAlimentaireduGard_44.svg',
+            iconSize: [19.0, 19.0]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_BanqueAlimentaireduGard_44');
+        map.getPane('pane_BanqueAlimentaireduGard_44').style.zIndex = 444;
+        map.getPane('pane_BanqueAlimentaireduGard_44').style['mix-blend-mode'] = 'normal';
+        var layer_BanqueAlimentaireduGard_44 = new L.geoJson(json_BanqueAlimentaireduGard_44, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_BanqueAlimentaireduGard_44',
+            layerName: 'layer_BanqueAlimentaireduGard_44',
+            pane: 'pane_BanqueAlimentaireduGard_44',
+            onEachFeature: pop_BanqueAlimentaireduGard_44,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_BanqueAlimentaireduGard_44_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_BanqueAlimentaireduGard_44);
+        map.addLayer(layer_BanqueAlimentaireduGard_44);
+            var title = new L.Control();
+            title.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'info');
+                this.update();
+                return this._div;
+            };
+            title.update = function () {
+                this._div.innerHTML = '<h2>L\'aide alimentaire dans le gard </h2>';
+            };
+            title.addTo(map);
+        var baseMaps = {};
+        var overlaysTree = [
+            {label: '<img src="legend/BanqueAlimentaireduGard_44.png" /> Banque Alimentaire du Gard', layer: layer_BanqueAlimentaireduGard_44},
+            {label: '<img src="legend/LOrdredeMalte_43.png" /> L\'Ordre de Malte', layer: layer_LOrdredeMalte_43},
+            {label: '<img src="legend/SecoursCatholique_42.png" /> Secours Catholique', layer: layer_SecoursCatholique_42},
+            {label: '<img src="legend/CroixRouge_41.png" /> Croix-Rouge', layer: layer_CroixRouge_41},
+            {label: '<img src="legend/CCASpartenaires_40.png" /> CCAS (partenaires)', layer: layer_CCASpartenaires_40},
+            {label: '<img src="legend/Autresassociationspartenaires_39.png" /> Autres associations partenaires', layer: layer_Autresassociationspartenaires_39},
+            {label: '<img src="legend/RestosduCoeur_38.png" /> Restos du Coeur', layer: layer_RestosduCoeur_38},
+            {label: '<img src="legend/SecoursPopulaire_37.png" /> Secours Populaire', layer: layer_SecoursPopulaire_37},
+            {label: '<img src="legend/SecoursCatholiquenonpartenaireBA_36.png" /> Secours Catholique (non partenaire BA)', layer: layer_SecoursCatholiquenonpartenaireBA_36},
+            {label: '<img src="legend/Dispositifsitinrantsnonpartenaires_35.png" /> Dispositifs itinérants non partenaires', layer: layer_Dispositifsitinrantsnonpartenaires_35},
+            {label: '<img src="legend/Autresassociationshabilites_34.png" /> Autres associations habilitées', layer: layer_Autresassociationshabilites_34},
+            {label: '<img src="legend/Communesavecaidealimentaire_33.png" /> Communes avec aide alimentaire', layer: layer_Communesavecaidealimentaire_33},
+            {label: '<img src="legend/Tangoarrtsdebus_32.png" /> Tango - arrêts de bus', layer: layer_Tangoarrtsdebus_32},
+            {label: '<img src="legend/Tangolignesdebus_31.png" /> Tango - lignes de bus', layer: layer_Tangolignesdebus_31},
+            {label: '<img src="legend/CommunesdanslerseauTANGO_30.png" /> Communes dans le réseau TANGO', layer: layer_CommunesdanslerseauTANGO_30},
+            {label: '<img src="legend/TransportAlsetpriphrie_29.png" /> Transport Alès et périphérie', layer: layer_TransportAlsetpriphrie_29},
+            {label: '<img src="legend/CommunesdesserviesparTCAlesetsapriphrie_28.png" /> Communes desservies par TC - Ales et sa périphérie', layer: layer_CommunesdesserviesparTCAlesetsapriphrie_28},
+            {label: '<img src="legend/UGGOarrtsdebus_27.png" /> UGGO - arrêts de bus', layer: layer_UGGOarrtsdebus_27},
+            {label: '<img src="legend/TransportBagnolsSurCze_26.png" /> Transport Bagnols-Sur-Cèze', layer: layer_TransportBagnolsSurCze_26},
+            {label: '<img src="legend/TransportAvignon_25.png" /> Transport Avignon', layer: layer_TransportAvignon_25},
+            {label: '<img src="legend/Lignesinterurbaines_24.png" /> Lignes interurbaines', layer: layer_Lignesinterurbaines_24},
+            {label: '<img src="legend/Communesdesserviesparlerseauinterurbain_23.png" /> Communes desservies par le réseau interurbain', layer: layer_Communesdesserviesparlerseauinterurbain_23},
+            {label: '<img src="legend/CommunesnondesserviespasTC_22.png" /> Communes non desservies pas TC', layer: layer_CommunesnondesserviespasTC_22},
+            {label: '<img src="legend/CommunesavecQPV_21.png" /> Communes avec QPV', layer: layer_CommunesavecQPV_21},
+            {label: '<img src="legend/QPVGard_20.png" /> QPV Gard ', layer: layer_QPVGard_20},
+            {label: '<img src="legend/TauxdepauvretEPCI_105_19.png" /> Taux de pauvreté EPCI _10,5%', layer: layer_TauxdepauvretEPCI_105_19},
+            {label: '<img src="legend/TauxdepauvretEPCI_138168_18.png" /> Taux de pauvreté EPCI _13,8 % - 16,8%', layer: layer_TauxdepauvretEPCI_138168_18},
+            {label: '<img src="legend/TauxdepauvretEPCI_174194_17.png" /> Taux de pauvreté EPCI _17,4% - 19,4%', layer: layer_TauxdepauvretEPCI_174194_17},
+            {label: '<img src="legend/TauxdepauvretEPCI_215225_16.png" /> Taux de pauvreté EPCI _21,5% - 22,5%', layer: layer_TauxdepauvretEPCI_215225_16},
+            {label: '<img src="legend/TauxdepauvretEPCI_255265_15.png" /> Taux de pauvreté EPCI _25,5% - 26,5%', layer: layer_TauxdepauvretEPCI_255265_15},
+            {label: 'Unité Territoriale d\'Action Sociale et d\'Insertion -UTASI<br /><table><tr><td style="text-align: center;"><img src="legend/UnitTerritorialedActionSocialeetdInsertionUTASI_14_CamargueVidourle0.png" /></td><td>Camargue Vidourle</td></tr><tr><td style="text-align: center;"><img src="legend/UnitTerritorialedActionSocialeetdInsertionUTASI_14_CévennesAigoual1.png" /></td><td>Cévennes-Aigoual</td></tr><tr><td style="text-align: center;"><img src="legend/UnitTerritorialedActionSocialeetdInsertionUTASI_14_GrandNîmes2.png" /></td><td>Grand Nîmes</td></tr><tr><td style="text-align: center;"><img src="legend/UnitTerritorialedActionSocialeetdInsertionUTASI_14_UzègeGardRhodanien3.png" /></td><td>Uzège-Gard Rhodanien</td></tr></table>', layer: layer_UnitTerritorialedActionSocialeetdInsertionUTASI_14},
+            {label: '<img src="legend/PATAlsAgglo_13.png" /> PAT-Alès Agglo', layer: layer_PATAlsAgglo_13},
+            {label: '<img src="legend/PATNmesMtropole_12.png" /> PAT-Nîmes Métropole', layer: layer_PATNmesMtropole_12},
+            {label: '<img src="legend/PATPetiteCamargue_11.png" /> PAT-Petite Camargue', layer: layer_PATPetiteCamargue_11},
+            {label: '<img src="legend/PATPimontCvnol_10.png" /> PAT-Piémont Cévénol', layer: layer_PATPimontCvnol_10},
+            {label: '<img src="legend/PATPaysdUzs_9.png" /> PAT-Pays d\'Uzès', layer: layer_PATPaysdUzs_9},
+            {label: '<img src="legend/PATUzgePontduGard_8.png" /> PAT-Uzège Pont du Gard', layer: layer_PATUzgePontduGard_8},
+            {label: '<img src="legend/PATVirdouleCamargue_7.png" /> PAT-Virdoule Camargue', layer: layer_PATVirdouleCamargue_7},
+            {label: '<img src="legend/PATdpartemental_6.png" /> PAT départemental', layer: layer_PATdpartemental_6},
+            {label: '<img src="legend/Centresdesecours_5.png" /> Centres de secours', layer: layer_Centresdesecours_5},
+            {label: '<img src="legend/Gard_4.png" /> Gard', layer: layer_Gard_4},
+            {label: '<img src="legend/Dpartementsvoisins_3.png" /> Départements voisins', layer: layer_Dpartementsvoisins_3},
+            {label: '<img src="legend/EPCIGard_2.png" /> EPCI (Gard) ', layer: layer_EPCIGard_2},
+            {label: '<img src="legend/GardCommunes_1.png" /> Gard Communes', layer: layer_GardCommunes_1},
+            {label: "Google Road", layer: layer_GoogleRoad_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false, 
+        });
+        lay.addTo(map);
+        setBounds();
+        var i = 0;
+        layer_Dpartementsvoisins_3.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['libgeo'] !== null?String('<div style="color: #323232; font-size: 15pt; font-family: \'Bahnschrift Condensed\', sans-serif;">' + layer.feature.properties['libgeo']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Dpartementsvoisins_3'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_GardCommunes_1,layer_Dpartementsvoisins_3,layer_Gard_4]);
+        map.on("zoomend", function(){
+            resetLabels([layer_GardCommunes_1,layer_Dpartementsvoisins_3,layer_Gard_4]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_GardCommunes_1,layer_Dpartementsvoisins_3,layer_Gard_4]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_GardCommunes_1,layer_Dpartementsvoisins_3,layer_Gard_4]);
+        });
+        </script>
+    </body>
+</html>
